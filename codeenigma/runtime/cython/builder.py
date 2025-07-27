@@ -111,7 +111,7 @@ class CythonRuntimeBuilder(IRuntimeBuilder):
         self.create_init_file(output_dir / "codeenigma_runtime")
 
         # Step 4: Creates a pyproject.toml file
-        self.create_pyproject_toml(f".codeenigma_runtime/{so_file.name}", output_dir)
+        self.create_pyproject_toml(f"codeenigma_runtime/{so_file.name}", output_dir)
 
         # Step 5. Generates wheel using the bundler
         self.bundler.create_wheel(output_dir / "codeenigma_runtime", output_dir)

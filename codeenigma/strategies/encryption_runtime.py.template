@@ -12,11 +12,11 @@ except ModuleNotFoundError:
     print("Error: rich and cryptography modules are required to run this code. Please install them using pip install rich cryptography or using poetry add rich cryptography.")
     sys.exit(1)
 
-NONCE = $nonce
-SECRET_KEY = $secret_key
-
 def execute_secure_code(secure_code: bytes, globals_dict=None) -> None:
 
+    NONCE = $nonce
+    $secret_key_code
+    
     if globals_dict is None:
         globals_dict = globals()
 
@@ -24,9 +24,13 @@ def execute_secure_code(secure_code: bytes, globals_dict=None) -> None:
 
     try:
         decrypted = aesgcm.decrypt(NONCE, secure_code, None)
+        del NONCE, SECRET_KEY, aesgcm
         compressed = base64.b64decode(decrypted)
+        del decrypted
         marshaled = zlib.decompress(compressed)
+        del compressed
         code_obj = marshal.loads(marshaled)
+        del marshaled
         if isinstance(code_obj, types.CodeType):
             exec(code_obj, globals_dict)
         else:

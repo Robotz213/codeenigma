@@ -5,6 +5,7 @@ from pathlib import Path
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
+from codeenigma.private import generate_obfuscated_key_code
 from codeenigma.strategies.base import BaseObfuscationStrategy
 
 
@@ -26,7 +27,7 @@ class CodeEnigmaObfuscationStrategy(BaseObfuscationStrategy):
     def template_vars(self) -> dict:
         return {
             "nonce": repr(self.nonce),
-            "secret_key": repr(self.secret_key),
+            "secret_key_code": generate_obfuscated_key_code(self.secret_key),
         }
 
     def obfuscate(self, file_path: str, **kwargs) -> bytes:
