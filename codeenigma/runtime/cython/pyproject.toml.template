@@ -3,7 +3,7 @@ name = "codeenigma_runtime"
 version = $version
 description = "CodeEnigma Runtime"
 include = [
-    { path = "$so_file_path", format = "wheel" }
+    { path = "$module_file_path", format = "wheel" }
 ]
 
 [tool.poetry.dependencies]
