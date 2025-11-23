@@ -197,7 +197,10 @@ def build(
         t = Template(path_spec_template.read_text(encoding="utf-8"))
 
         # compiled_codeenigma should be a list of 2-tuples: (source, destination)
-        compiled_codeenigma = f"[({repr(str(runtime_compiled.resolve()))}, '.')]"
+        compiled_codeenigma = f"[({str(runtime_compiled.resolve())}, '.')]"
+
+        console.print(f"{compiled_codeenigma}")
+
         module_spec = t.safe_substitute(
             {
                 "entry_point": repr(str(Path(module_path).resolve())),

@@ -3,8 +3,8 @@
 
 a = Analysis(
     [$entry_point],
-    pathex=[],
-    binaries=[$compiled_codeenigma],
+    pathex=["."],
+    binaries=$compiled_codeenigma,
     datas=[],
     hiddenimports=[],
     hookspath=[],
