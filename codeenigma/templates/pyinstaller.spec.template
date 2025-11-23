@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    [$entry_file],
+    [$entry_point],
     pathex=[],
     binaries=[$compiled_codeenigma],
     datas=[],
