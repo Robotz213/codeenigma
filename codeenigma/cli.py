@@ -2,8 +2,12 @@
 CLI interface for CodeEnigma
 """
 
+import shutil
+import subprocess
+import traceback
 from datetime import UTC, datetime
 from pathlib import Path
+from string import Template
 
 import typer
 from rich.console import Console
@@ -11,6 +15,7 @@ from rich.panel import Panel
 
 from codeenigma import __version__
 from codeenigma.bundler.poetry import PoetryBundler
+from codeenigma.constants import EXTENSION_COMPILED_MODULE
 from codeenigma.extensions import ExpiryExtension
 from codeenigma.orchestrator import Orchestrator
 from codeenigma.private import NONCE, SECRET_KEY
@@ -117,12 +122,95 @@ def obfuscate(
             console.print(f"Output files saved to: {Path(output_dir).resolve()}")
 
     except Exception as e:
-        console.print(f"\n[bold red]Error during obfuscation:[/bold red] {str(e)}")
-        raise typer.Exit(1) from None
+        exc = "\n".join(traceback.format_exception(e))
+        console.print(f"\n[bold red]Error during obfuscation:[/bold red] {exc}")
+        raise typer.Exit(1) from e
 
 
 @app.command()
-def version():
+def build(
+    exe_name: str = typer.Argument(..., help="Name of the output executable file"),
+    module_path: str = typer.Argument(
+        ..., help="Path to the Python module to obfuscate"
+    ),
+    expiration_date: str = typer.Option(
+        None,
+        "--expiration",
+        "-e",
+        help="Expiration date for the obfuscated code (YYYY-MM-DD)",
+    ),
+    output_dir: str = typer.Option(
+        "cedist",
+        "--output",
+        "-o",
+        "--dist",
+        help="Output directory for obfuscated files",
+    ),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
+) -> None:
+    """Obfuscate a Python module and its dependencies."""
+    display_banner()
+    obfuscate(
+        module_path=module_path,
+        expiration_date=expiration_date,
+        output_dir=output_dir,
+        verbose=verbose,
+    )
+
+    try:
+        console.print("\n[bold]Starting pyinstaller build...[/bold]")
+
+        module_path: Path = Path(module_path)
+        current_dir = Path.cwd()
+        module_name = module_path.parent.name
+        parent = Path(__file__).parent
+        templates_path = parent.joinpath("templates")
+
+        dist_path = current_dir.joinpath(output_dir)
+        path_module_obfuscated = dist_path.joinpath(module_name)
+        runtime_path = dist_path.joinpath("codeenigma_runtime")
+        dest = path_module_obfuscated.joinpath("codeenigma_runtime")
+
+        old_text = "from codeenigma_runtime"
+        new_text = f"from {module_name}.codeenigma_runtime"
+        for file in path_module_obfuscated.rglob("*.py"):
+            file_text = file.read_text()
+            text_replaced = file_text.replace(old_text, new_text)
+            file.write_text(text_replaced)
+
+        shutil.move(runtime_path, dest)
+
+        path_spec_template = templates_path.joinpath("pyinstaller.spec.template")
+
+        glob_file = dest.glob(f"codeenigma_runtime*.{EXTENSION_COMPILED_MODULE}")
+        runtime_compiled = list(glob_file)[-1]
+        t = Template(path_spec_template.read_text(encoding="utf-8"))
+
+        module_spec = t.safe_substitute(
+            {
+                "entry_point": repr(str(Path(module_path).resolve())),
+                "compiled_codeenigma": repr(str(runtime_compiled.resolve())),
+                "exe_name": exe_name,
+            }
+        )
+
+        dest_spec_file = dist_path.joinpath(f"{module_name}.spec")
+        with dest_spec_file.open("w", encoding="utf-8") as f:
+            f.write(module_spec)
+
+        subprocess.run(
+            ["pyinstaller", str(dest_spec_file), "--distpath", str(dist_path)],
+            check=True,
+        )
+
+    except Exception as e:
+        exc = "\n".join(traceback.format_exception(e))
+        console.print(f"\n[bold red]Error during build:[/bold red] {exc}")
+        raise typer.Exit(1) from e
+
+
+@app.command()
+def version() -> None:
     """Show the version of CodeEnigma."""
     console.print(f"CodeEnigma CLI v{__version__}")
 

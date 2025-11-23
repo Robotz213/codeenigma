@@ -7,3 +7,6 @@ if platform.system() != $platform:
     sys.exit(1)
 
 from .codeenigma_runtime import execute_secure_code
+
+
+__all__ = ["execute_secure_code"]

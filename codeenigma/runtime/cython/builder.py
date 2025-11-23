@@ -54,6 +54,11 @@ class CythonRuntimeBuilder(IRuntimeBuilder):
         with output_init_file.open("w", encoding="utf-8") as f:
             f.write(init_code)
 
+        stub_template_path = Path(__file__).parent.joinpath("runtime.pyi.template")
+        shutil.copyfile(
+            stub_template_path, output_path.joinpath("codeenigma_runtime.pyi")
+        )
+
     @staticmethod
     def create_pyproject_toml(module_file_path: str, output_path: Path) -> None:
         """Creates the pyproject.toml file"""

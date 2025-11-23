@@ -1,0 +1,4 @@
+def execute_secure_code(
+    secure_code: bytes,
+    globals_dict: dict | None = None,
+) -> None: ...
