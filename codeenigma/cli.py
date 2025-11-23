@@ -129,9 +129,14 @@ def obfuscate(
 
 @app.command()
 def build(
-    exe_name: str = typer.Argument(..., help="Name of the output executable file"),
     module_path: str = typer.Argument(
         ..., help="Path to the Python module to obfuscate"
+    ),
+    exe_name: str = typer.Option(
+        "MyApp",
+        "--exe-name",
+        "-exe",
+        help="Name of the output executable",
     ),
     expiration_date: str = typer.Option(
         None,
@@ -149,7 +154,6 @@ def build(
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
 ) -> None:
     """Obfuscate a Python module and its dependencies."""
-    display_banner()
     obfuscate(
         module_path=module_path,
         expiration_date=expiration_date,
