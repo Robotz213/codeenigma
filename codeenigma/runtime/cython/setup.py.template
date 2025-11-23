@@ -1,4 +1,5 @@
 import os
+import platform
 import sys
 import subprocess
 from setuptools import find_packages, setup
@@ -58,9 +59,11 @@ setup(
     zip_safe=False,
 )
 
-try:
-    so_file = next(p for p in os.listdir('.') if p.startswith("codeenigma_runtime") and p.endswith(".so"))
-    print(f"Stripping binary: {so_file}")
-    subprocess.run(["strip", "-x", so_file], check=True)
-except Exception as e:
-    print(f"[Warning] Could not strip shared object: {e}")
+
+if platform.system() != "Windows":
+    try:
+        module_file = next(p for p in os.listdir('.') if p.startswith("codeenigma_runtime") and p.endswith(".so"))
+        print(f"Stripping binary: {module_file}")
+        subprocess.run(["strip", "-x", module_file], check=True)
+    except Exception as e:
+        print(f"[Warning] Could not strip shared object: {e}")
