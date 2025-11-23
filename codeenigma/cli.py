@@ -170,7 +170,7 @@ def build(
 
         module_path: Path = Path(module_path)
         current_dir = Path.cwd()
-        module_name = module_path.parent.name
+        module_name = module_path.name
         parent = Path(__file__).parent
         templates_path = parent.joinpath("templates")
 
@@ -190,7 +190,7 @@ def build(
 
         path_spec_template = templates_path.joinpath("pyinstaller.spec.template")
 
-        glob_file = dest.glob(f"codeenigma_runtime*.{EXTENSION_COMPILED_MODULE}")
+        glob_file = dest.glob(f"*.{EXTENSION_COMPILED_MODULE}")
         runtime_compiled = list(glob_file)[-1]
         t = Template(path_spec_template.read_text(encoding="utf-8"))
 
