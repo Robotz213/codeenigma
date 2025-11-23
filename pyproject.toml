@@ -14,9 +14,15 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
     "Topic :: Security",
     "Topic :: Utilities",
-    "Operating System :: OS Independent"
+    "Operating System :: OS Independent",
 ]
-keywords = ["obfuscation", "code protection", "python security", "pyarmor alternative", "secure distribution"]
+keywords = [
+    "obfuscation",
+    "code protection",
+    "python security",
+    "pyarmor alternative",
+    "secure distribution",
+]
 
 [tool.poetry.urls]
 Homepage = "https://github.com/KrishnanSG/codeenigma"
@@ -28,9 +34,9 @@ Tracker = "https://github.com/KrishnanSG/codeenigma/issues"
 codeenigma = "codeenigma.cli:app"
 
 [tool.poetry.dependencies]
-python = ">=3.10, <3.14"
+python = ">=3.10, <3.15"
 cryptography = ">=40.0.4"
-typer = {extras = ["all"], version = ">=0.14.0"}
+typer = { extras = ["all"], version = ">=0.14.0" }
 rich = ">=13.0.0"
 setuptools = ">=70.0.0"
 cython = ">=3.0.0"
@@ -48,13 +54,13 @@ pytest-xdist = "^3.8.0"
 [tool.poetry.group.build.dependencies]
 pyinstaller = "^6.14.1"
 
-[tool.ruff.lint]
+[tool.ruff]
 select = [
-    "E", # pycodestyle errors
-    "W", # pycodestyle warnings
-    "F", # pyflakes
-    "I", # isort
-    "B", # flake8-bugbear
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
     "C4", # flake8-comprehensions
     "UP", # pyupgrade
 ]
@@ -66,16 +72,14 @@ ignore = [
     "W191", # indentation contains tabs
 ]
 
-# Pydocstyle settings for docstring conventions
-[lint.pydocstyle]
+[tool.ruff.pydocstyle]
 convention = "google"
 
-[tool.ruff.lint.isort]
+[tool.ruff.isort]
 combine-as-imports = true
 force-single-line = false
 
-# Formatting settings
-[format]
+[tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
@@ -89,8 +93,4 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.coverage.run]
 relative_files = true
-omit = [
-    "tests/*",
-    "setup.py",
-    "*/__init__.py",
-]
+omit = ["tests/*", "setup.py", "*/__init__.py"]

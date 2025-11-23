@@ -2,11 +2,11 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
 
 import rich
 
 from codeenigma.bundler.base import IBundler
+from codeenigma.constants import EXTENSION_COMPILED_MODULE
 
 
 class StandardBundler(IBundler):  # pragma: no cover
@@ -40,9 +40,7 @@ class StandardBundler(IBundler):  # pragma: no cover
                 "Cannot build extensions without setuptools."
             )
 
-    def create_wheel(
-        self, module_path: Path, output_dir: Optional[Path] = None, **kwargs
-    ):
+    def create_wheel(self, module_path: Path, output_dir: Path | None = None, **kwargs):
         self._check_for_setuptools_project(module_path.parent)
         rich.print("[bold blue]Building wheel using standard setuptools[/bold blue]")
         try:
@@ -81,15 +79,19 @@ class StandardBundler(IBundler):  # pragma: no cover
         return final_wheel_location
 
     def create_extension(
-        self, module_path: Path, output_dir: Optional[Path] = None, **kwargs
-    ):
+        self,
+        module_path: Path,
+        output_dir: Path | None = None,
+        **kwargs,
+    ) -> Path:
         # Build the extension in-place
         self._check_for_setuptools_project(module_path.parent)
-        if (module_path.parent / "setup.py").exists():
-            location = module_path.parent
 
-        elif (module_path / "setup.py").exists():
-            location = module_path
+        location = (
+            module_path
+            if module_path.joinpath("setup.py").exists()
+            else module_path.parent
+        )
 
         subprocess.run(
             [sys.executable, "setup.py", "build_ext", "--inplace"],
@@ -97,17 +99,20 @@ class StandardBundler(IBundler):  # pragma: no cover
             check=True,
         )
 
-        so_file = list(location.glob("*.so"))[-1]
+        module_file = list(location.glob(f"*{EXTENSION_COMPILED_MODULE}"))[-1]
         # clean up intermediate files
-        shutil.rmtree(location / "build")
 
-        final_so_location = so_file
+        build_path = location.joinpath("build")
+        shutil.rmtree(build_path)
+
+        final_module_location = module_file
+        module_file_path = location.joinpath(module_file.name)
         if output_dir:
             output_dir.mkdir(exist_ok=True)
-            shutil.move(so_file, output_dir / so_file.name)
-            final_so_location = output_dir / so_file.name
+            shutil.move(module_file, module_file_path)
+            final_module_location = module_file_path
 
         rich.print(
-            f"[green]✓ Extension built successfully ({final_so_location})[/green]"
+            f"[green]✓ Extension built successfully ({final_module_location})[/green]"
         )
-        return final_so_location
+        return final_module_location

@@ -1,3 +1,4 @@
+import platform
 import shutil
 import subprocess
 from pathlib import Path
@@ -5,12 +6,14 @@ from pathlib import Path
 import rich
 
 from codeenigma.bundler.base import IBundler
-from codeenigma.constants import EXTENSION_COMPILED_MODULE
+
+EXTENSION_COMPILED_MODULE = ".so" if platform.system() != "Windows" else ".pyd"
 
 
-class PoetryBundler(IBundler):
+class UVBundler(IBundler):
     @staticmethod
-    def remove_readme_before_build(pyproject_path: Path):
+    def remove_readme_before_build(pyproject_path: Path) -> None:
+        content = pyproject_path.read_text()
         with open(pyproject_path) as f:
             content = f.read()
 
@@ -18,38 +21,47 @@ class PoetryBundler(IBundler):
             f.write(content.replace('readme = "README.md"', ""))
 
     def create_wheel(self, module_path: Path, output_dir: Path | None = None, **kwargs):
-        # check if the pyproject.toml is in poetry format
-        if not (module_path.parent / "pyproject.toml").exists():
+        pyproject_file = module_path.parent / "pyproject.toml"
+        if not pyproject_file.exists():
             raise FileNotFoundError(f"pyproject.toml not found in {module_path.parent}")
 
-        # check if the pyproject.toml is in poetry format
-        with open(module_path.parent / "pyproject.toml", "rb") as f:
+        with open(pyproject_file, "rb") as f:
             import tomllib
 
             content = tomllib.load(f)
             try:
-                version = content["tool"]["poetry"]["version"]
-            except KeyError as e:
-                raise Exception(
-                    "Invalid pyproject.toml file, not in poetry format"
-                ) from e
+                version = content["project"]["version"]
+            except KeyError:
+                # fallback for poetry format
+                try:
+                    version = content["tool"]["poetry"]["version"]
+                except KeyError as e:
+                    raise Exception(
+                        "Invalid pyproject.toml file, missing version"
+                    ) from e
 
         if kwargs.get("remove_readme", True):
-            self.remove_readme_before_build(module_path.parent / "pyproject.toml")
+            self.remove_readme_before_build(pyproject_file)
 
-        rich.print("[bold blue]Building wheel using poetry[/bold blue]")
+        rich.print("[bold blue]Building wheel using uv[/bold blue]")
         subprocess.run(
-            ["poetry", "build", "-f", "wheel"],
+            ["uv", "pip", "install", "-e", "."],
+            cwd=str(module_path.parent),
+            check=True,
+        )
+        subprocess.run(
+            ["uv", "run", "python", "-m", "build", "--wheel"],
             cwd=str(module_path.parent),
             check=True,
         )
 
-        wheel_file = list((module_path.parent / "dist").glob(f"*{version}*.whl"))[-1]
+        dist_path = module_path.parent.joinpath("dist")
+        wheel_file = list(dist_path.glob(f"*{version}*.whl"))[-1]
         final_wheel_location = wheel_file
 
         if output_dir:
             output_dir.mkdir(exist_ok=True)
-            final_wheel_location = output_dir / wheel_file.name
+            final_wheel_location = output_dir.joinpath(wheel_file.name)
             shutil.move(wheel_file, final_wheel_location)
 
         rich.print(
@@ -70,10 +82,10 @@ class PoetryBundler(IBundler):
                 f"setup.py not found in {module_path.parent} or {module_path}"
             )
 
-        rich.print("[bold blue]Building extension using poetry[/bold blue]")
+        rich.print("[bold blue]Building extension using uv[/bold blue]")
         try:
             subprocess.run(
-                ["poetry", "run", "python", "setup.py", "build_ext", "--inplace"],
+                ["uv", "run", "python", "setup.py", "build_ext", "--inplace"],
                 cwd=str(location),
                 check=True,
             )
@@ -87,7 +99,6 @@ class PoetryBundler(IBundler):
             )
 
         module_file = list(location.glob(f"*{EXTENSION_COMPILED_MODULE}"))[-1]
-        # clean up intermediate files
         shutil.rmtree(location / "build")
 
         final_module_location = module_file
