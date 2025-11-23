@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import traceback
 from datetime import UTC, datetime
+from os import environ
 from pathlib import Path
 from string import Template
 
@@ -154,6 +155,9 @@ def build(
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
 ) -> None:
     """Obfuscate a Python module and its dependencies."""
+
+    environ.update({"CODEENIGMA_BUILDING_EXE": "1"})
+
     obfuscate(
         module_path=module_path,
         expiration_date=expiration_date,
@@ -211,6 +215,9 @@ def build(
         exc = "\n".join(traceback.format_exception(e))
         console.print(f"\n[bold red]Error during build:[/bold red] {exc}")
         raise typer.Exit(1) from e
+
+    finally:
+        environ.update({"CODEENIGMA_BUILDING_EXE": "0"})
 
 
 @app.command()

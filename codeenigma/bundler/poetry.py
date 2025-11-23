@@ -1,5 +1,6 @@
 import shutil
 import subprocess
+from os import environ
 from pathlib import Path
 
 import rich
@@ -37,25 +38,28 @@ class PoetryBundler(IBundler):
         if kwargs.get("remove_readme", True):
             self.remove_readme_before_build(module_path.parent / "pyproject.toml")
 
-        rich.print("[bold blue]Building wheel using poetry[/bold blue]")
-        subprocess.run(
-            ["poetry", "build", "-f", "wheel"],
-            cwd=str(module_path.parent),
-            check=True,
-        )
+        if environ.get("CODEENIGMA_BUILDING_EXE", "0") == "0":
+            rich.print("[bold blue]Building wheel using poetry[/bold blue]")
+            subprocess.run(
+                ["poetry", "build", "-f", "wheel"],
+                cwd=str(module_path.parent),
+                check=True,
+            )
 
-        wheel_file = list((module_path.parent / "dist").glob(f"*{version}*.whl"))[-1]
-        final_wheel_location = wheel_file
+            wheel_file = list((module_path.parent / "dist").glob(f"*{version}*.whl"))[
+                -1
+            ]
+            final_wheel_location = wheel_file
 
-        if output_dir:
-            output_dir.mkdir(exist_ok=True)
-            final_wheel_location = output_dir / wheel_file.name
-            shutil.move(wheel_file, final_wheel_location)
+            if output_dir:
+                output_dir.mkdir(exist_ok=True)
+                final_wheel_location = output_dir / wheel_file.name
+                shutil.move(wheel_file, final_wheel_location)
 
-        rich.print(
-            f"[green]✓ Wheel built successfully ({final_wheel_location})[/green]"
-        )
-        return final_wheel_location
+            rich.print(
+                f"[green]✓ Wheel built successfully ({final_wheel_location})[/green]"
+            )
+            return final_wheel_location
 
     def create_extension(
         self, module_path: Path, output_dir: Path | None = None, **kwargs
