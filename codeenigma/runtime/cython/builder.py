@@ -1,6 +1,7 @@
 import platform
 import shutil
 from collections.abc import Sequence
+from contextlib import suppress
 from pathlib import Path
 from string import Template
 
@@ -110,7 +111,8 @@ class CythonRuntimeBuilder(IRuntimeBuilder):
         ]:
             output_dir.joinpath(temp_file).unlink(missing_ok=True)
 
-        output_dir.joinpath("build").rmdir()
+        with suppress(Exception):
+            output_dir.joinpath("build").rmdir()
 
         # Packing into codeenigma_runtime wheel
 
