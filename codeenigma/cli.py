@@ -203,7 +203,9 @@ def build(
 
         module_spec = t.safe_substitute(
             {
-                "entry_point": repr(str(Path(module_path).resolve())),
+                "entry_point": repr(
+                    str(Path(module_path).resolve().joinpath("__main__.py"))
+                ),
                 "compiled_codeenigma": compiled_codeenigma,
                 "exe_name": exe_name,
             }
