@@ -196,10 +196,12 @@ def build(
         runtime_compiled = list(glob_file)[-1]
         t = Template(path_spec_template.read_text(encoding="utf-8"))
 
+        # compiled_codeenigma should be a list of 2-tuples: (source, destination)
+        compiled_codeenigma = f"[({repr(str(runtime_compiled.resolve()))}, '.')]"
         module_spec = t.safe_substitute(
             {
                 "entry_point": repr(str(Path(module_path).resolve())),
-                "compiled_codeenigma": repr(str(runtime_compiled.resolve())),
+                "compiled_codeenigma": compiled_codeenigma,
                 "exe_name": exe_name,
             }
         )
