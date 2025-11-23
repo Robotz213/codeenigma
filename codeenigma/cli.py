@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 from os import environ
 from pathlib import Path
 from string import Template
+from time import sleep
 
 import typer
 from rich.console import Console
@@ -191,6 +192,11 @@ def build(
         path_spec_template = templates_path.joinpath("pyinstaller.spec.template")
 
         glob_file = dest.glob(f"*.{EXTENSION_COMPILED_MODULE}")
+
+        console.print(f"{str(dest)}")
+        console.log(f"{str(glob_file)}")
+        sleep(5)
+
         runtime_compiled = list(glob_file)[-1]
         t = Template(path_spec_template.read_text(encoding="utf-8"))
 
